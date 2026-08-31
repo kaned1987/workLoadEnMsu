@@ -133,9 +133,11 @@ export function createTeachingWorkloadWorkbook(options: ExportExcelOptions): XLS
       }
     }
 
-    // Workload cell value: exact numeric value or '—' if uncalculated / invalid
-    let workloadVal: number | string = '—';
-    if (
+    // Workload cell value: 0 for Project/Thesis, exact numeric for normal courses, '—' for errors
+        let workloadVal: number | string = '—';
+        if (course.isExcluded) {
+          workloadVal = 0; // Project/Thesis: show 0
+        } else if (
       course.workload !== undefined &&
       course.workload !== null &&
       !isNaN(course.workload) &&

@@ -175,15 +175,19 @@ export default function App() {
     });
 
     // 4. ภาระงานรวม (Sum of all valid calculated workload values)
-    const totalWorkloadResult = calculateTotalWorkload(courses);
+        const totalWorkloadResult = calculateTotalWorkload(courses);
 
-    return {
-      courseCount: uniqueCourseCodes.size,
-      sectionCount: totalSections,
-      coInstructorCount: distinctCoInstructors.size,
-      totalWorkload: totalWorkloadResult.totalWorkload,
-      invalidWorkloadCount: totalWorkloadResult.invalidCount,
-    };
+        // 5. จำนวนรายการ Project/Thesis ที่ถูกยกเว้น
+        const excludedProjectCount = courses.filter((c) => c.isExcluded).length;
+
+        return {
+          courseCount: uniqueCourseCodes.size,
+          sectionCount: totalSections,
+          coInstructorCount: distinctCoInstructors.size,
+          totalWorkload: totalWorkloadResult.totalWorkload,
+          invalidWorkloadCount: totalWorkloadResult.invalidCount,
+          excludedCount: excludedProjectCount,
+        };
   }, [selectedSemester, selectedInstructor, courses]);
 
   // 5. Handle Reset Action

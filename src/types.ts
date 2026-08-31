@@ -34,7 +34,8 @@ export interface CourseRecord {
   coInstructors?: string[];
   workload?: number; // Calculated in Milestone 3
   workloadError?: string; // Descriptive reason if calculation failed (e.g. invalid credit or 0 instructors)
-  teachingType?: 'บรรยาย' | 'ปฏิบัติ' | 'บรรยาย/ปฏิบัติ' | string;
+    isExcluded?: boolean; // True if course is Project/Thesis — workload forced to 0, excluded from totals
+    teachingType?: 'บรรยาย' | 'ปฏิบัติ' | 'บรรยาย/ปฏิบัติ' | string;
   rawRowIndex?: number;
 }
 
@@ -43,8 +44,9 @@ export interface DashboardSummary {
   sectionCount: number | null;
   coInstructorCount: number | null;
   totalWorkload: number | null; // Calculated sum in Milestone 3
-  invalidWorkloadCount?: number;
-}
+    invalidWorkloadCount?: number;
+    excludedCount?: number; // Number of Project/Thesis courses excluded from workload
+  }
 
 export type UIState = 'initial' | 'loading' | 'empty' | 'error' | 'loaded';
 
