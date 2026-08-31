@@ -11,6 +11,8 @@
  * - 4 and 7.5 are fixed regulatory factors
  */
 
+import { CourseRecord } from '../types';
+
 export interface WorkloadCalculationResult {
   workload: number | null;
   isValid: boolean;
@@ -139,7 +141,7 @@ export function calculateTeachingWorkload(
  * If all records are invalid or empty, returns null.
  */
 export function calculateTotalWorkload(
-  records: Array<{ workload?: number | null }>
+  records: CourseRecord[]
 ): TotalWorkloadResult {
   if (!records || records.length === 0) {
     return {
@@ -155,6 +157,11 @@ export function calculateTotalWorkload(
   let invalidCount = 0;
 
   for (const record of records) {
+    // Skip Project/Thesis courses entirely — they show 0 but don't contribute to totals
+    if (record.isExcluded) {
+      continue;
+    }
+
     if (
       record.workload !== null &&
       record.workload !== undefined &&
