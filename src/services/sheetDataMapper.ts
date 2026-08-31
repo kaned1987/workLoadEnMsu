@@ -1,5 +1,6 @@
 import { CourseRecord, DataMappingField, InstructorOption, SemesterOption } from '../types';
 import { calculateTeachingWorkload, parseMainCredit } from './workloadCalculator';
+import { isProjectOrThesisCourse } from './projectThesisDetector';
 
 /**
  * Column alias patterns for auto-detecting headers in ENMSU_CoruseDatabase
@@ -312,13 +313,16 @@ export function mergeDuplicateCourseRecords(
     });
 
     // Credit extraction
-    const creditText = first.creditText || (first.creditNumber ? String(first.creditNumber) : '—');
-    const creditNumber = first.creditNumber ?? (parseMainCredit(creditText) ?? undefined);
+        const creditText = first.creditText || (first.creditNumber ? String(first.creditNumber) : '—');
+        const creditNumber = first.creditNumber ?? (parseMainCredit(creditText) ?? undefined);
 
-    // Calculate workload ONCE for the merged record
-    const workloadResult = calculateTeachingWorkload(creditNumber ?? creditText, instructorCount);
+        // Detect Project/Thesis courses — force workload to 0, exclude from totals
+        const isExcludedCourse = isProjectOrThesisCourse(first.courseName);
 
-    // Filter co-instructors
+        // Calculate workload ONCE for the merged record
+        const workloadResult = calculateTeachingWorkload(creditNumber ?? creditText, instructorCount);
+
+        // Filter co-instructors
     const coInstructors = targetInstructor
       ? mergedInstructors.filter(
           (name) =>
@@ -349,9 +353,14 @@ export function mergeDuplicateCourseRecords(
       instructorText: instructorText,
       instructors: mergedInstructors.length > 0 ? mergedInstructors : first.instructors,
       coInstructors: coInstructors,
-      workload: workloadResult.isValid && workloadResult.workload !== null ? workloadResult.workload : undefined,
-      workloadError: !workloadResult.isValid ? workloadResult.errorMessage : undefined,
-      teachingType: teachingType,
+      workload: isExcludedCourse
+              ? 0
+              : (workloadResult.isValid && workloadResult.workload !== null ? workloadResult.workload : undefined),
+            workloadError: isExcludedCourse
+              ? undefined
+              : (!workloadResult.isValid ? workloadResult.errorMessage : undefined),
+            isExcluded: isExcludedCourse,
+            teachingType: teachingType,
       rawRowIndex: first.rawRowIndex,
     };
 
@@ -417,29 +426,37 @@ export function normalizeSheetRows(
       }
 
       // Extract credit number
-      const creditNumber = parseMainCredit(creditText) ?? undefined;
+            const creditNumber = parseMainCredit(creditText) ?? undefined;
 
-      // Calculate workload for this record
-      const workloadResult = calculateTeachingWorkload(creditNumber ?? creditText, instructorCount);
+            // Detect Project/Thesis courses — force workload to 0, exclude from totals
+            const isExcludedCourse = isProjectOrThesisCourse(courseName);
 
-      const record: CourseRecord = {
-        id: `course-${index + 1}-${courseCode || 'no-code'}-${section || '01'}`,
-        semester: semester || 'ไม่ระบุภาคเรียน',
-        courseCode: courseCode || '—',
-        courseName: courseName || '—',
-        creditText: creditText || '—',
-        creditNumber: creditNumber,
-        section: section || '—',
-        day: day || '—',
-        time: time || '—',
-        studentCount: studentCount,
-        instructorCount: instructorCount,
-        instructorText: parsedInstructors.length > 0 ? parsedInstructors.join(' | ') : (rawInstructorText || '—'),
-        instructors: parsedInstructors.length > 0 ? parsedInstructors : (rawInstructorText ? [rawInstructorText] : []),
-        coInstructors: [],
-        workload: workloadResult.isValid && workloadResult.workload !== null ? workloadResult.workload : undefined,
-        workloadError: !workloadResult.isValid ? workloadResult.errorMessage : undefined,
-        teachingType: teachingType || '—',
+            // Calculate workload for this record
+            const workloadResult = calculateTeachingWorkload(creditNumber ?? creditText, instructorCount);
+
+            const record: CourseRecord = {
+              id: `course-${index + 1}-${courseCode || 'no-code'}-${section || '01'}`,
+              semester: semester || 'ไม่ระบุภาคเรียน',
+              courseCode: courseCode || '—',
+              courseName: courseName || '—',
+              creditText: creditText || '—',
+              creditNumber: creditNumber,
+              section: section || '—',
+              day: day || '—',
+              time: time || '—',
+              studentCount: studentCount,
+              instructorCount: instructorCount,
+              instructorText: parsedInstructors.length > 0 ? parsedInstructors.join(' | ') : (rawInstructorText || '—'),
+              instructors: parsedInstructors.length > 0 ? parsedInstructors : (rawInstructorText ? [rawInstructorText] : []),
+              coInstructors: [],
+              workload: isExcludedCourse
+                ? 0
+                : (workloadResult.isValid && workloadResult.workload !== null ? workloadResult.workload : undefined),
+              workloadError: isExcludedCourse
+                ? undefined
+                : (!workloadResult.isValid ? workloadResult.errorMessage : undefined),
+              isExcluded: isExcludedCourse,
+              teachingType: teachingType || '—',
         rawRowIndex: index + 2,
       };
 
