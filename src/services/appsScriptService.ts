@@ -8,6 +8,7 @@ import {
 } from '../types';
 import { parseInstructorNames, mergeDuplicateCourseRecords } from './sheetDataMapper';
 import { calculateTeachingWorkload, parseMainCredit } from './workloadCalculator';
+import { isProjectOrThesisCourse } from './projectThesisDetector';
 
 export const DEFAULT_APPS_SCRIPT_URL =
   'https://script.google.com/macros/s/AKfycbyNaVYZee1gbnU2yIDYJ4xq936MUgKuypK5fg6GmgQ5R4A73fGHGvH9jRoWGGpIfeD9hw/exec';
@@ -389,26 +390,34 @@ export async function getCourses(
     const creditNumber = typeof r.credit === 'number' && r.credit > 0 ? r.credit : (parseMainCredit(creditText) ?? undefined);
 
     // Initial workload calculation
-    const workloadResult = calculateTeachingWorkload(creditNumber ?? creditText, instructorCount);
+        const workloadResult = calculateTeachingWorkload(creditNumber ?? creditText, instructorCount);
 
-    return {
-      id: r.id || `raw-course-${index + 1}-${r.courseCode || 'code'}-${r.section || '1'}`,
-      semester: r.semester || semester,
-      courseCode: r.courseCode || '—',
-      courseName: r.courseName || '—',
-      creditText: creditText,
-      creditNumber: creditNumber,
-      section: r.section || '—',
-      day: day,
-      time: time,
-      studentCount: studentCount,
-      instructorCount: instructorCount,
-      instructorText: instructorText,
-      instructors: instructorsList.length > 0 ? instructorsList : [instructorText],
-      coInstructors: coInstructors,
-      workload: workloadResult.isValid && workloadResult.workload !== null ? workloadResult.workload : undefined,
-      workloadError: !workloadResult.isValid ? workloadResult.errorMessage : undefined,
-      teachingType: r.teachingType || '—',
+        // Detect Project/Thesis courses — force workload to 0, exclude from totals
+        const isExcludedCourse = isProjectOrThesisCourse(r.courseName || '');
+
+        return {
+          id: r.id || `raw-course-${index + 1}-${r.courseCode || 'code'}-${r.section || '1'}`,
+          semester: r.semester || semester,
+          courseCode: r.courseCode || '—',
+          courseName: r.courseName || '—',
+          creditText: creditText,
+          creditNumber: creditNumber,
+          section: r.section || '—',
+          day: day,
+          time: time,
+          studentCount: studentCount,
+          instructorCount: instructorCount,
+          instructorText: instructorText,
+          instructors: instructorsList.length > 0 ? instructorsList : [instructorText],
+          coInstructors: coInstructors,
+          workload: isExcludedCourse
+            ? 0
+            : (workloadResult.isValid && workloadResult.workload !== null ? workloadResult.workload : undefined),
+          workloadError: isExcludedCourse
+            ? undefined
+            : (!workloadResult.isValid ? workloadResult.errorMessage : undefined),
+          isExcluded: isExcludedCourse,
+          teachingType: r.teachingType || '—',
       rawRowIndex: index + 1,
     };
   });
