@@ -62,7 +62,14 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({ summary, isLoading =
       iconBg: 'bg-[#fdf2f2]',
       borderColor: 'border-[#f3d1d1]',
       isHighlight: true,
-      footnote: summary.invalidWorkloadCount && summary.invalidWorkloadCount > 0 ? `(ยกเว้น ${summary.invalidWorkloadCount} รายการที่ไม่สามารถคำนวณได้)` : undefined,
+            footnote: [
+              summary.invalidWorkloadCount && summary.invalidWorkloadCount > 0
+                ? `(ยกเว้น ${summary.invalidWorkloadCount} รายการที่ไม่สามารถคำนวณได้)`
+                : undefined,
+              summary.excludedCount && summary.excludedCount > 0
+                ? `(${summary.excludedCount} รายการโครงงาน/วิทยานิพนธ์ แสดง 0 และไม่นับรวม)`
+                : undefined,
+            ].filter(Boolean).join(' | ') || undefined,
     },
   ];
 
