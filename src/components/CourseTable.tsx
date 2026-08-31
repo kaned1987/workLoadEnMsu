@@ -20,8 +20,10 @@ export const CourseTable: React.FC<CourseTableProps> = ({
   onRetry,
 }) => {
   const invalidCoursesCount = courses.filter(
-    (c) => c.workload === undefined || c.workload === null || isNaN(c.workload)
+    (c) => (c.workload === undefined || c.workload === null || isNaN(c.workload)) && !c.isExcluded
   ).length;
+
+  const excludedCount = courses.filter((c) => c.isExcluded).length;
 
   return (
     <div 
@@ -51,16 +53,21 @@ export const CourseTable: React.FC<CourseTableProps> = ({
         )}
       </div>
 
-      {/* Non-blocking Warning Banner if some records are invalid */}
-      {courses.length > 0 && uiState === 'loaded' && invalidCoursesCount > 0 && (
-        <div className="px-5 py-2.5 bg-amber-50/80 border-b border-amber-100 text-amber-800 text-xs flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-          <span>
-            พบ <strong>{invalidCoursesCount}</strong> รายการที่ไม่สามารถคำนวณภาระงานได้เนื่องจากไม่พบหน่วยกิตหรือจำนวนผู้สอน
-            (ระบบแสดงเครื่องหมาย <strong>—</strong> และยกเว้นจากการคำนวณยอดรวม)
-          </span>
-        </div>
-      )}
+      {/* Non-blocking Warning Banner if some records are invalid or excluded */}
+            {courses.length > 0 && uiState === 'loaded' && (invalidCoursesCount > 0 || excludedCount > 0) && (
+              <div className="px-5 py-2.5 bg-amber-50/80 border-b border-amber-100 text-amber-800 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>
+                  พบ <strong>{invalidCoursesCount}</strong> รายการที่ไม่สามารถคำนวณภาระงานได้เนื่องจากไม่พบหน่วยกิตหรือจำนวนผู้สอน
+                  (ระบบแสดงเครื่องหมาย <strong>—</strong> และยกเว้นจากการคำนวณยอดรวม)
+                </span>
+                {excludedCount > 0 && (
+                  <span className="ml-2 text-slate-500">
+                    — {excludedCount} รายการโครงงาน/วิทยานิพนธ์ (ภาระงาน = 0)
+                  </span>
+                )}
+              </div>
+            )}
 
       {/* Main Content / Table Area */}
       {uiState === 'initial' && (
