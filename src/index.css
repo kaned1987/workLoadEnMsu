@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --color-maroon-primary: #800000;
+    --color-maroon-dark: #630000;
+    --color-maroon-light: #9e1a1d;
+    --color-maroon-subtle: #fdf2f2;
+    --color-maroon-border: #f3d1d1;
+    --font-prompt: 'Prompt', 'Sarabun', system-ui, -apple-system, sans-serif;
+  }
+
+  body {
+    font-family: var(--font-prompt);
+    color: #1e293b;
+    background-color: #f8fafc;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+

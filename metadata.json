@@ -1,0 +1,6 @@
+{
+  "name": "ระบบคำนวณภาระงานสอน",
+  "description": "ระบบคำนวณภาระงานสอน คณะวิศวกรรมศาสตร์ มหาวิทยาลัยมหาสารคาม",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
